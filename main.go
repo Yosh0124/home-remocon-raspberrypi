@@ -14,9 +14,14 @@ import (
 const (
 	clientID          string = "home-remocon"  // MQTT Client ID
 	topicRemoconLight string = "remocon/light" // Topic for controling room light
+	topicRemoconAir   string = "remocon/air"   // Topic fpr controling room air conditioner
 	pinNumLightOn     int    = 4               // GPIO for turing on a light
 	pinNumLightOff    int    = 17              // GPIO for turing off a light
 	pinNumLightSmall  int    = 27              // GPIO for turing on a small light
+	pinNumAirOff      int    = 18              // GPIO for turing off a air conditioner
+	pinNumAirCooler   int    = 5               // GPIO for turing on a cooler
+	pinNumAirHeader   int    = 6               // GPIO for turing on a cooler
+
 )
 
 func main() {
@@ -40,6 +45,15 @@ func main() {
 	pinLightSmall := rpio.Pin(pinNumLightSmall)
 	pinLightSmall.Output()
 	pinLightSmall.High()
+	pinAirOff := rpio.Pin(pinNumAirOff)
+	pinAirOff.Output()
+	pinAirOff.High()
+	pinAirCooler := rpio.Pin(pinNumAirCooler)
+	pinAirCooler.Output()
+	pinAirCooler.High()
+	pinAirHeater := rpio.Pin(pinNumAirHeader)
+	pinAirHeater.Output()
+	pinAirHeater.High()
 
 	//define a function for the default message handler
 	var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
@@ -78,6 +92,37 @@ func main() {
 		}
 	}
 
+	// define a function for the room light message handler
+	var hRemoconAir MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
+		fmt.Printf("TOPIC: %s\n", msg.Topic())
+		fmt.Printf("MSG: %s\n", msg.Payload())
+
+		// Unmarshal json
+		msgMap := make(map[string]interface{})
+		if err := json.Unmarshal(msg.Payload(), &msgMap); err != nil {
+			fmt.Printf(err.Error())
+		}
+
+		// json format :
+		// {
+		//   "status" : "on", "off" or "small"
+		// }
+		switch msgMap["status"] {
+		case "off":
+			pinAirOff.Low()
+			time.Sleep(100 * time.Millisecond)
+			pinAirOff.High()
+		case "cooler":
+			pinAirCooler.Low()
+			time.Sleep(100 * time.Millisecond)
+			pinAirCooler.High()
+		case "heater":
+			pinAirHeater.Low()
+			time.Sleep(100 * time.Millisecond)
+			pinAirHeater.High()
+		}
+	}
+
 	// Inisialize MQTT
 	//create a ClientOptions struct setting the broker address, clientid, turn
 	//off trace output and set the default message handler
@@ -105,6 +150,15 @@ func main() {
 	defer func() {
 		//unsubscribe from /go-mqtt/sample
 		if token := c.Unsubscribe(topicRemoconLight); token.Wait() && token.Error() != nil {
+			panic(token.Error())
+		}
+	}()
+	if token := c.Subscribe(topicRemoconAir, 0, hRemoconAir); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+	defer func() {
+		//unsubscribe from /go-mqtt/sample
+		if token := c.Unsubscribe(topicRemoconAir); token.Wait() && token.Error() != nil {
 			panic(token.Error())
 		}
 	}()
