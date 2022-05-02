@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	"github.com/stianeikeland/go-rpio"
 )
@@ -165,8 +167,24 @@ func main() {
 		}
 	}()
 
+	// Nextjs
+	go func() {
+		startFront := exec.Command("yarn", "start")
+		startFront.Dir = "front"
+		_, err := startFront.Output()
+		if err != nil {
+			log.Panic(err)
+		}
+	}()
+
 	// Go
 	e := echo.New()
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+	}))
+
 	e.POST("/light", func(c echo.Context) error {
 		// Unmarshal json
 		msgMap := make(map[string]interface{})
@@ -232,5 +250,6 @@ func main() {
 
 		return c.JSON(http.StatusOK, msgMap)
 	})
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
