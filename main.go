@@ -1,13 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
-	"os"
 	"os/exec"
 	"time"
 
-	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -59,113 +56,113 @@ func main() {
 	pinAirHeater.Output()
 	pinAirHeater.High()
 
-	//define a function for the default message handler
-	var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
-		log.Info("TOPIC: %s\n", msg.Topic())
-		log.Info("MSG: %s\n", msg.Payload())
-	}
+	// //define a function for the default message handler
+	// var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
+	// 	log.Info("TOPIC: %s\n", msg.Topic())
+	// 	log.Info("MSG: %s\n", msg.Payload())
+	// }
 
-	// define a function for the room light message handler
-	var hRemoconLight MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
-		log.Info("TOPIC: %s\n", msg.Topic())
-		log.Info("MSG: %s\n", msg.Payload())
+	// // define a function for the room light message handler
+	// var hRemoconLight MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
+	// 	log.Info("TOPIC: %s\n", msg.Topic())
+	// 	log.Info("MSG: %s\n", msg.Payload())
 
-		// Unmarshal json
-		msgMap := make(map[string]interface{})
-		if err := json.Unmarshal(msg.Payload(), &msgMap); err != nil {
-			log.Error(err.Error())
-		}
+	// 	// Unmarshal json
+	// 	msgMap := make(map[string]interface{})
+	// 	if err := json.Unmarshal(msg.Payload(), &msgMap); err != nil {
+	// 		log.Error(err.Error())
+	// 	}
 
-		// json format :
-		// {
-		//   "status" : "on", "off" or "small"
-		// }
-		switch msgMap["status"] {
-		case "on":
-			pinLightOn.Low()
-			time.Sleep(100 * time.Millisecond)
-			pinLightOn.High()
-		case "off":
-			pinLightOff.Low()
-			time.Sleep(100 * time.Millisecond)
-			pinLightOff.High()
-		case "small":
-			pinLightSmall.Low()
-			time.Sleep(100 * time.Millisecond)
-			pinLightSmall.High()
-		}
-	}
+	// 	// json format :
+	// 	// {
+	// 	//   "status" : "on", "off" or "small"
+	// 	// }
+	// 	switch msgMap["status"] {
+	// 	case "on":
+	// 		pinLightOn.Low()
+	// 		time.Sleep(100 * time.Millisecond)
+	// 		pinLightOn.High()
+	// 	case "off":
+	// 		pinLightOff.Low()
+	// 		time.Sleep(100 * time.Millisecond)
+	// 		pinLightOff.High()
+	// 	case "small":
+	// 		pinLightSmall.Low()
+	// 		time.Sleep(100 * time.Millisecond)
+	// 		pinLightSmall.High()
+	// 	}
+	// }
 
-	// define a function for the room light message handler
-	var hRemoconAir MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
-		log.Info("TOPIC: %s\n", msg.Topic())
-		log.Info("MSG: %s\n", msg.Payload())
+	// // define a function for the room light message handler
+	// var hRemoconAir MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
+	// 	log.Info("TOPIC: %s\n", msg.Topic())
+	// 	log.Info("MSG: %s\n", msg.Payload())
 
-		// Unmarshal json
-		msgMap := make(map[string]interface{})
-		if err := json.Unmarshal(msg.Payload(), &msgMap); err != nil {
-			log.Error(err.Error())
-		}
+	// 	// Unmarshal json
+	// 	msgMap := make(map[string]interface{})
+	// 	if err := json.Unmarshal(msg.Payload(), &msgMap); err != nil {
+	// 		log.Error(err.Error())
+	// 	}
 
-		// json format :
-		// {
-		//   "status" : "on", "off" or "small"
-		// }
-		switch msgMap["status"] {
-		case "off":
-			pinAirOff.Low()
-			time.Sleep(100 * time.Millisecond)
-			pinAirOff.High()
-		case "cooler":
-			pinAirCooler.Low()
-			time.Sleep(100 * time.Millisecond)
-			pinAirCooler.High()
-		case "heater":
-			pinAirHeater.Low()
-			time.Sleep(100 * time.Millisecond)
-			pinAirHeater.High()
-		}
-	}
+	// 	// json format :
+	// 	// {
+	// 	//   "status" : "on", "off" or "small"
+	// 	// }
+	// 	switch msgMap["status"] {
+	// 	case "off":
+	// 		pinAirOff.Low()
+	// 		time.Sleep(100 * time.Millisecond)
+	// 		pinAirOff.High()
+	// 	case "cooler":
+	// 		pinAirCooler.Low()
+	// 		time.Sleep(100 * time.Millisecond)
+	// 		pinAirCooler.High()
+	// 	case "heater":
+	// 		pinAirHeater.Low()
+	// 		time.Sleep(100 * time.Millisecond)
+	// 		pinAirHeater.High()
+	// 	}
+	// }
 
-	// Inisialize MQTT
-	//create a ClientOptions struct setting the broker address, clientid, turn
-	//off trace output and set the default message handler
-	mqttUsername := os.Getenv("MQTT_USER")
-	mqttPassword := os.Getenv("MQTT_PASSWD")
-	mqttHost := os.Getenv("MQTT_HOST")
-	opts := MQTT.NewClientOptions().AddBroker(mqttHost)
-	opts.SetClientID(clientID)
-	opts.SetDefaultPublishHandler(f)
-	opts.SetUsername(mqttUsername)
-	opts.SetPassword(mqttPassword)
+	// // Inisialize MQTT
+	// //create a ClientOptions struct setting the broker address, clientid, turn
+	// //off trace output and set the default message handler
+	// mqttUsername := os.Getenv("MQTT_USER")
+	// mqttPassword := os.Getenv("MQTT_PASSWD")
+	// mqttHost := os.Getenv("MQTT_HOST")
+	// opts := MQTT.NewClientOptions().AddBroker(mqttHost)
+	// opts.SetClientID(clientID)
+	// opts.SetDefaultPublishHandler(f)
+	// opts.SetUsername(mqttUsername)
+	// opts.SetPassword(mqttPassword)
 
-	//create and start a client using the above ClientOptions
-	c := MQTT.NewClient(opts)
-	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		log.Panic(token.Error())
-	}
-	defer c.Disconnect(250)
+	// //create and start a client using the above ClientOptions
+	// c := MQTT.NewClient(opts)
+	// if token := c.Connect(); token.Wait() && token.Error() != nil {
+	// 	log.Panic(token.Error())
+	// }
+	// defer c.Disconnect(250)
 
-	//subscribe to the light remocon topic and request messages to be delivered
-	//at a maximum qos of zero, wait for the receipt to confirm the subscription
-	if token := c.Subscribe(topicRemoconLight, 0, hRemoconLight); token.Wait() && token.Error() != nil {
-		log.Panic(token.Error())
-	}
-	defer func() {
-		//unsubscribe from /go-mqtt/sample
-		if token := c.Unsubscribe(topicRemoconLight); token.Wait() && token.Error() != nil {
-			log.Panic(token.Error())
-		}
-	}()
-	if token := c.Subscribe(topicRemoconAir, 0, hRemoconAir); token.Wait() && token.Error() != nil {
-		log.Panic(token.Error())
-	}
-	defer func() {
-		//unsubscribe from /go-mqtt/sample
-		if token := c.Unsubscribe(topicRemoconAir); token.Wait() && token.Error() != nil {
-			log.Panic(token.Error())
-		}
-	}()
+	// //subscribe to the light remocon topic and request messages to be delivered
+	// //at a maximum qos of zero, wait for the receipt to confirm the subscription
+	// if token := c.Subscribe(topicRemoconLight, 0, hRemoconLight); token.Wait() && token.Error() != nil {
+	// 	log.Panic(token.Error())
+	// }
+	// defer func() {
+	// 	//unsubscribe from /go-mqtt/sample
+	// 	if token := c.Unsubscribe(topicRemoconLight); token.Wait() && token.Error() != nil {
+	// 		log.Panic(token.Error())
+	// 	}
+	// }()
+	// if token := c.Subscribe(topicRemoconAir, 0, hRemoconAir); token.Wait() && token.Error() != nil {
+	// 	log.Panic(token.Error())
+	// }
+	// defer func() {
+	// 	//unsubscribe from /go-mqtt/sample
+	// 	if token := c.Unsubscribe(topicRemoconAir); token.Wait() && token.Error() != nil {
+	// 		log.Panic(token.Error())
+	// 	}
+	// }()
 
 	// Nextjs
 	go func() {
